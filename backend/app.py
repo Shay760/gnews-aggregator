@@ -1,27 +1,34 @@
+# app.py
 from flask import Flask, jsonify, request
 from flask_cors import CORS
-from pymongo import MongoClient
 from dotenv import load_dotenv
-import os 
+from models import News, UserInteraction
 
-load_dotenv() # Load environment variables from .env file 
+load_dotenv()
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for all routes
+CORS(app)
 
-# Configuration settings
-app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'default_secret_key')
+app.config['SECRET_KEY'] = 'default_secret_key'
 
-# MongoDB Database Connection 
-client = MongoClient(os.environ.get("MONGODB_URI", "mongodb://localhost:27017"))
-db = client.get_default_database()
+# No need to initialize MongoClient, use the PyMongo instance
+# client = MongoClient(os.environ.get("MONGODB_URI", "mongodb://localhost:27017/gaming_news_aggregator"))
+# db = client.get_default_database()
 
+# Use the PyMongo instance from models.py
+from models import mongo
 
 # Example route to get general gaming news
 @app.route('/api/news', methods=['GET'])
 def get_general_news():
-    # Logic to fetch and return general gaming news
-    return jsonify({'message': 'General gaming news data'})
+    news_data = News.get_all()
+    return jsonify({'news': news_data})
+
+# Example route to update user preferences
+@app.route('/api/user/preferences', methods=['POST'])
+def update_user_preferences():
+    user_interaction = UserInteraction.create(user_id='user123', news_id='news456', interaction_type='like')
+    return jsonify({'message': 'User preferences updated'})
 
 # Example route to get specific news based on news_id
 @app.route('/api/news/<int:news_id>', methods=['GET'])
@@ -36,7 +43,7 @@ def create_news():
     return jsonify({'message': 'News created'})
 
 # Example route to update user preferences
-@app.route('/api/user/preferences', methods=['POST'])
+@app.route('/api/user/preferences/other', methods=['POST'])
 def update_user_preferences():
     # Logic to update user preferences based on frontend request
     return jsonify({'message': 'User preferences updated'})
